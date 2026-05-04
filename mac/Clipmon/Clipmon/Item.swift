@@ -97,7 +97,7 @@ final class ClipboardEntry {
 extension ClipboardEntry {
     var displayTitle: String {
         switch kind {
-        case .text, .markdown, .richText, .spreadsheet:
+        case .text, .markdown, .richText, .spreadsheet, .color:
             return preview
         case .image:
             return fileName ?? "Image"
@@ -116,7 +116,7 @@ extension ClipboardEntry {
             return fileName ?? "Audio clipboard item"
         case .file:
             return fileName ?? "File clipboard item"
-        case .text, .markdown, .richText, .spreadsheet:
+        case .text, .markdown, .richText, .spreadsheet, .color:
             let content = (textContent ?? "")
                 .replacingOccurrences(of: "\n", with: " ")
                 .trimmingCharacters(in: .whitespacesAndNewlines)

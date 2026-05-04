@@ -1,4 +1,6 @@
 import Foundation
+import SwiftUI
+import Combine
 
 /// Persisted sync configuration. Stored as JSON in `~/Library/Application Support/Clipmon/sync.json`.
 struct SyncSettings: Codable, Equatable {

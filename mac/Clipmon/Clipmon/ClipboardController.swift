@@ -101,7 +101,7 @@ final class ClipboardHistoryController: ObservableObject {
         pasteboard.clearContents()
 
         switch entry.kind {
-        case .text, .markdown:
+        case .text, .markdown, .color:
             pasteboard.setString(entry.textContent ?? "", forType: .string)
         case .richText:
             if let payloadData = entry.payloadData {
