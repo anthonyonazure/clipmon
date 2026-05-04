@@ -6,12 +6,15 @@ import SwiftUI
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var controller: ClipboardHistoryController
+    @EnvironmentObject private var syncStore: SyncSettingsStore
+    @EnvironmentObject private var sync: SyncClient
     @Query(sort: [SortDescriptor(\ClipboardEntry.updatedAt, order: .reverse)])
     private var entries: [ClipboardEntry]
 
     @State private var selectionFingerprint: String?
     @State private var scope: EntryScope = .all
     @State private var showingClearConfirmation = false
+    @State private var showingSettings = false
     @State private var mainWindow: NSWindow?
     @State private var wasHiddenBeforeDrag = false
     @State private var isFileDragActive = false
@@ -79,6 +82,12 @@ struct ContentView: View {
                     } label: {
                         toolbarLabel("Clear", icon: "trash", compact: isCompactLayout)
                     }
+
+                    Button {
+                        showingSettings = true
+                    } label: {
+                        toolbarLabel("Settings", icon: "gearshape", compact: isCompactLayout)
+                    }
                 }
             }
             .confirmationDialog(
@@ -98,6 +107,11 @@ struct ContentView: View {
             }
             .onAppear {
                 controller.startIfNeeded(modelContext: modelContext)
+            }
+            .sheet(isPresented: $showingSettings) {
+                SyncSettingsView()
+                    .environmentObject(syncStore)
+                    .environmentObject(sync)
             }
             .background(
                 WindowAccessor { window in
