@@ -1,0 +1,17 @@
+{
+  "name": "clipmon-relay",
+  "version": "0.1.0",
+  "description": "Stateless WebSocket relay for Clipmon E2E-encrypted clipboard sync.",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node smoke-test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

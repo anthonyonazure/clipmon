@@ -1,0 +1,257 @@
+<Application x:Class="Clipmon.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:Clipmon.Converters"
+             ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+        <ResourceDictionary>
+            <converters:KindToGlyphConverter x:Key="KindToGlyph" />
+            <converters:KindToDisplayNameConverter x:Key="KindToDisplayName" />
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+            <converters:NotNullToVisibilityConverter x:Key="NotNullToVisibility" />
+            <converters:PinnedToGlyphConverter x:Key="PinnedToGlyph" />
+            <converters:PayloadToImageConverter x:Key="PayloadToImage" />
+            <converters:RelativeTimeConverter x:Key="RelativeTime" />
+            <converters:HexToBrushConverter x:Key="HexToBrush" />
+
+            <!-- =========================== Color tokens =========================== -->
+            <Color x:Key="AccentColorStart">#5B8DEF</Color>
+            <Color x:Key="AccentColorEnd">#7C66E8</Color>
+
+            <SolidColorBrush x:Key="AccentBrush" Color="#4B7AE8" />
+            <SolidColorBrush x:Key="AccentDeepBrush" Color="#1E40AF" />
+            <SolidColorBrush x:Key="AccentSubtleBrush" Color="#EEF2FE" />
+
+            <LinearGradientBrush x:Key="AccentGradient" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="{StaticResource AccentColorStart}" Offset="0" />
+                <GradientStop Color="{StaticResource AccentColorEnd}" Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="HeroGradient" StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#EEF2FF" Offset="0" />
+                <GradientStop Color="#F0EBFF" Offset="0.5" />
+                <GradientStop Color="#E0F2FE" Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="WindowBackgroundGradient" StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#F6F8FB" Offset="0" />
+                <GradientStop Color="#EFF1F5" Offset="1" />
+            </LinearGradientBrush>
+
+            <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F4F6F9" />
+            <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="ElevatedSurfaceBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="InsetSurfaceBrush" Color="#F2F4F7" />
+            <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#FFFFFF" />
+
+            <SolidColorBrush x:Key="TextPrimaryBrush" Color="#0F1419" />
+            <SolidColorBrush x:Key="TextSecondaryBrush" Color="#5C6770" />
+            <SolidColorBrush x:Key="TextTertiaryBrush" Color="#8B939B" />
+            <SolidColorBrush x:Key="MutedBrush" Color="#5C6770" />
+
+            <SolidColorBrush x:Key="DividerBrush" Color="#E7EAEF" />
+            <SolidColorBrush x:Key="DividerStrongBrush" Color="#D6DAE0" />
+            <SolidColorBrush x:Key="HoverBrush" Color="#F1F4F7" />
+            <SolidColorBrush x:Key="SelectedRowBrush" Color="#EEF2FE" />
+
+            <SolidColorBrush x:Key="SuccessBrush" Color="#118D57" />
+            <SolidColorBrush x:Key="SuccessSubtleBrush" Color="#DDF7E5" />
+            <SolidColorBrush x:Key="WarningBrush" Color="#B76E00" />
+            <SolidColorBrush x:Key="WarningSubtleBrush" Color="#FFF4D5" />
+            <SolidColorBrush x:Key="DestructiveBrush" Color="#C62828" />
+            <SolidColorBrush x:Key="DestructiveSubtleBrush" Color="#FBE5E5" />
+
+            <FontFamily x:Key="GlyphFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+            <FontFamily x:Key="UIFont">Segoe UI Variable, Segoe UI</FontFamily>
+            <FontFamily x:Key="MonoFont">Cascadia Code, Cascadia Mono, Consolas</FontFamily>
+
+            <!-- =========================== Effects =========================== -->
+            <DropShadowEffect x:Key="CardShadow"
+                              BlurRadius="28" Opacity="0.10"
+                              ShadowDepth="3" Direction="270"
+                              Color="#1A1B1E" />
+
+            <DropShadowEffect x:Key="SubtleShadow"
+                              BlurRadius="16" Opacity="0.06"
+                              ShadowDepth="1" Direction="270"
+                              Color="#1A1B1E" />
+
+            <DropShadowEffect x:Key="HoverShadow"
+                              BlurRadius="20" Opacity="0.10"
+                              ShadowDepth="2" Direction="270"
+                              Color="#1A1B1E" />
+
+            <!-- =========================== Buttons =========================== -->
+            <Style TargetType="Button" x:Key="GhostButton">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="14,8" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontFamily" Value="{StaticResource UIFont}" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Bd"
+                                    Background="{TemplateBinding Background}"
+                                    CornerRadius="10"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentSubtleBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.4" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style TargetType="Button" x:Key="ToolbarButton" BasedOn="{StaticResource GhostButton}">
+                <Setter Property="FontWeight" Value="Medium" />
+                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            </Style>
+
+            <Style TargetType="Button" x:Key="PrimaryButton">
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="Foreground" Value="White" />
+                <Setter Property="Padding" Value="20,10" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontFamily" Value="{StaticResource UIFont}" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Bd"
+                                    CornerRadius="10"
+                                    Background="{StaticResource AccentGradient}"
+                                    Padding="{TemplateBinding Padding}">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="14" Opacity="0.20"
+                                                      ShadowDepth="2" Direction="270"
+                                                      Color="#3A4FE6" />
+                                </Border.Effect>
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  TextElement.Foreground="White" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="Opacity" Value="0.92" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="Bd" Property="Opacity" Value="0.85" />
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style TargetType="Button" x:Key="SecondaryButton" BasedOn="{StaticResource GhostButton}">
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                <Setter Property="Background" Value="{StaticResource InsetSurfaceBrush}" />
+                <Setter Property="Padding" Value="16,9" />
+            </Style>
+
+            <Style TargetType="Button" x:Key="DestructiveButton" BasedOn="{StaticResource GhostButton}">
+                <Setter Property="Foreground" Value="{StaticResource DestructiveBrush}" />
+            </Style>
+
+            <!-- =========================== Scope pill (segmented control) =========================== -->
+            <Style TargetType="RadioButton" x:Key="ScopePill">
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="HorizontalContentAlignment" Value="Center" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="Padding" Value="14,9" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="FontFamily" Value="{StaticResource UIFont}" />
+                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RadioButton">
+                            <Border x:Name="Bd" CornerRadius="8"
+                                    Background="Transparent"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="#FFFFFF" />
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="#FFFFFF" />
+                                    <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- =========================== TextBox =========================== -->
+            <Style TargetType="TextBox" x:Key="SearchTextBox">
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontFamily" Value="{StaticResource UIFont}" />
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="CaretBrush" Value="{StaticResource AccentBrush}" />
+                <Setter Property="SelectionBrush" Value="{StaticResource AccentSubtleBrush}" />
+            </Style>
+
+            <!-- =========================== Window-wide defaults =========================== -->
+            <Style TargetType="Window">
+                <Setter Property="FontFamily" Value="{StaticResource UIFont}" />
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+                <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+                <Setter Property="UseLayoutRounding" Value="True" />
+            </Style>
+
+            <Style TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource UIFont}" />
+                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+                <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+            </Style>
+
+            <Style TargetType="Border" x:Key="Card">
+                <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+                <Setter Property="CornerRadius" Value="14" />
+                <Setter Property="Effect" Value="{StaticResource CardShadow}" />
+            </Style>
+
+            <!-- =========================== Stat tile =========================== -->
+            <Style TargetType="Border" x:Key="StatTile">
+                <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+                <Setter Property="CornerRadius" Value="12" />
+                <Setter Property="Padding" Value="14,12" />
+                <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+            </Style>
+
+            <!-- =========================== Chip (metadata pill) =========================== -->
+            <Style TargetType="Border" x:Key="MetaChip">
+                <Setter Property="Background" Value="{StaticResource InsetSurfaceBrush}" />
+                <Setter Property="CornerRadius" Value="999" />
+                <Setter Property="Padding" Value="10,5" />
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

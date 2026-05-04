@@ -35,7 +35,13 @@ private struct ModernRootView: View {
     var body: some View {
         ContentView()
             .environmentObject(controller)
+            .environmentObject(SyncSettingsStore.shared)
+            .environmentObject(SyncClient.shared)
             .modelContainer(ClipmonModelStore.sharedModelContainer)
+            .task {
+                let context = ClipmonModelStore.sharedModelContainer.mainContext
+                SyncClient.shared.attach(controller: controller, modelContext: context)
+            }
     }
 }
 
@@ -81,6 +87,8 @@ final class StatusBarController: NSObject {
             popover.contentViewController = NSHostingController(
                 rootView: MenuBarView()
                     .environmentObject(ClipboardHistoryController.shared)
+                    .environmentObject(SyncSettingsStore.shared)
+                    .environmentObject(SyncClient.shared)
                     .modelContainer(ClipmonModelStore.sharedModelContainer)
             )
         } else {

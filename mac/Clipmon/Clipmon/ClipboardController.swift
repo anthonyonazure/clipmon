@@ -36,8 +36,12 @@ final class ClipboardHistoryController: ObservableObject {
     @Published var isMonitoring = false
     @Published var statusMessage = "Ready to watch the clipboard"
 
+    /// Set by `SyncClient` so that newly-persisted entries get encrypted and broadcast.
+    var onEntrySaved: ((ClipboardEntry) -> Void)?
+
     private var modelContext: ModelContext?
     private var pollTimer: Timer?
+    private var autoClearTimer: Timer?
     private var lastObservedChangeCount: Int = NSPasteboard.general.changeCount
 
     func startIfNeeded(modelContext: ModelContext) {
@@ -174,6 +178,12 @@ final class ClipboardHistoryController: ObservableObject {
 
     private func save(payload: ClipboardCapturePayload) {
         guard let modelContext else { return }
+
+        if shouldSkip(payload) {
+            statusMessage = "Skipped sensitive item"
+            return
+        }
+
         let fingerprint = payload.fingerprint
 
         let descriptor = FetchDescriptor<ClipboardEntry>(
@@ -181,6 +191,7 @@ final class ClipboardHistoryController: ObservableObject {
         )
 
         do {
+            let savedEntry: ClipboardEntry
             if let existing = try modelContext.fetch(descriptor).first {
                 existing.refresh(
                     kind: payload.kind,
@@ -191,6 +202,7 @@ final class ClipboardHistoryController: ObservableObject {
                     utiIdentifier: payload.utiIdentifier,
                     sourceApplication: payload.sourceApplication
                 )
+                savedEntry = existing
             } else {
                 let entry = ClipboardEntry(
                     kind: payload.kind,
@@ -202,10 +214,18 @@ final class ClipboardHistoryController: ObservableObject {
                     sourceApplication: payload.sourceApplication
                 )
                 modelContext.insert(entry)
+                savedEntry = entry
             }
 
             saveContext()
             statusMessage = "Captured \(payload.kind.displayName.lowercased()) item"
+
+            // Notify sync client (if attached) — but don't broadcast remote-originated items.
+            if !(payload.sourceApplication?.hasPrefix("sync · ") ?? false) {
+                onEntrySaved?(savedEntry)
+            }
+
+            restartAutoClearTimer()
         } catch {
             statusMessage = "Failed to save clipboard item"
         }
@@ -257,8 +277,16 @@ final class ClipboardHistoryController: ObservableObject {
         }
 
         if let string = pasteboard.string(forType: .string) {
+            let kind: ClipboardContentKind
+            if looksLikeColor(string) {
+                kind = .color
+            } else if markdownLike(string) {
+                kind = .markdown
+            } else {
+                kind = .text
+            }
             return ClipboardCapturePayload(
-                kind: markdownLike(string) ? .markdown : .text,
+                kind: kind,
                 textContent: string,
                 fileName: nil,
                 fileURLString: nil,
@@ -324,6 +352,15 @@ final class ClipboardHistoryController: ObservableObject {
         return nil
     }
 
+    private static let colorRegex = try? NSRegularExpression(
+        pattern: #"^\s*(#?[0-9A-Fa-f]{6}|#?[0-9A-Fa-f]{8}|#?[0-9A-Fa-f]{3}|rgb\s*\(.+\)|rgba\s*\(.+\)|hsl\s*\(.+\)|hsla\s*\(.+\))\s*$"#
+    )
+
+    private func looksLikeColor(_ string: String) -> Bool {
+        guard string.count <= 32, let rx = Self.colorRegex else { return false }
+        return rx.firstMatch(in: string, range: NSRange(string.startIndex..., in: string)) != nil
+    }
+
     private func markdownLike(_ string: String) -> Bool {
         let lowercased = string.lowercased()
         return lowercased.contains("\n#")
@@ -332,6 +369,86 @@ final class ClipboardHistoryController: ObservableObject {
             || lowercased.contains("](")
             || lowercased.contains("- ")
             || lowercased.contains("* ")
+    }
+
+    private static let sensitivePatterns: [NSRegularExpression] = {
+        let raw = [
+            #"\bsk-[A-Za-z0-9]{20,}\b"#,
+            #"\bsk_live_[A-Za-z0-9]{20,}\b"#,
+            #"\bsk_test_[A-Za-z0-9]{20,}\b"#,
+            #"\bAKIA[0-9A-Z]{16}\b"#,
+            #"\bASIA[0-9A-Z]{16}\b"#,
+            #"\bgh[pousr]_[A-Za-z0-9]{20,}\b"#,
+            #"\bAIza[0-9A-Za-z_\-]{35}\b"#,
+            #"\bxox[abprs]-[A-Za-z0-9\-]{10,}\b"#,
+            #"\bglpat-[A-Za-z0-9_\-]{20,}\b"#,
+            #"\bnpm_[A-Za-z0-9]{36}\b"#,
+            #"\b[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}\b"#,
+            #"-----BEGIN [A-Z ]*PRIVATE KEY-----"#,
+        ]
+        return raw.compactMap { try? NSRegularExpression(pattern: $0) }
+    }()
+
+    private func shouldSkip(_ payload: ClipboardCapturePayload) -> Bool {
+        let settings = SyncSettingsStore.shared.current
+
+        // App skip list
+        if let app = payload.sourceApplication {
+            for entry in settings.skipApps where !entry.isEmpty {
+                if app.localizedCaseInsensitiveContains(entry) { return true }
+            }
+        }
+
+        guard let text = payload.textContent else { return false }
+
+        // Keyword skip list
+        for keyword in settings.skipKeywords where !keyword.isEmpty {
+            if text.localizedCaseInsensitiveContains(keyword) { return true }
+        }
+
+        guard settings.sensitiveFilterEnabled else { return false }
+
+        // Pattern matches
+        let range = NSRange(text.startIndex..., in: text)
+        for rx in Self.sensitivePatterns {
+            if rx.firstMatch(in: text, options: [], range: range) != nil { return true }
+        }
+
+        // Entropy heuristic for long single-token strings
+        if text.count >= 32 {
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.contains(" "), !trimmed.contains("\n"), shannonEntropy(trimmed) >= 4.5 {
+                return true
+            }
+        }
+        return false
+    }
+
+    private func shannonEntropy(_ s: String) -> Double {
+        var counts: [Character: Int] = [:]
+        for c in s { counts[c, default: 0] += 1 }
+        let length = Double(s.count)
+        var h = 0.0
+        for n in counts.values {
+            let p = Double(n) / length
+            h -= p * log2(p)
+        }
+        return h
+    }
+
+    private func restartAutoClearTimer() {
+        autoClearTimer?.invalidate()
+        autoClearTimer = nil
+
+        let settings = SyncSettingsStore.shared.current
+        guard settings.autoClearPasteboardEnabled, settings.autoClearAfterSeconds > 0 else { return }
+
+        let timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(settings.autoClearAfterSeconds), repeats: false) { [weak self] _ in
+            NSPasteboard.general.clearContents()
+            self?.statusMessage = "Auto-cleared OS clipboard"
+        }
+        autoClearTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
     }
 
     private func saveContext() {

@@ -54,7 +54,21 @@ Results update instantly as you type
 - Keep your clipboard clutter-free  
 
 ## Installation
-download the latest release from the Releases page.
+Download the latest release from the Releases page.
+
+### Windows
+The Windows port lives in [`windows/`](windows/) and is built on .NET 8 + WPF.
+
+```powershell
+cd windows
+dotnet build Clipmon.sln -c Debug
+dotnet run --project Clipmon
+```
+
+See [`windows/README.md`](windows/README.md) for build, publish, and architecture details.
+
+### macOS
+The macOS app lives in [`mac/`](mac/) and is built on SwiftUI + SwiftData. Open `mac/Clipmon/Clipmon.xcodeproj` in Xcode 15+ on macOS 14+.
 
 ## Use Cases
 - Copy code snippets and reuse them instantly  

@@ -11,6 +11,7 @@ enum ClipboardContentKind: String, CaseIterable, Codable {
     case image
     case audio
     case file
+    case color
 
     var displayName: String {
         switch self {
@@ -21,6 +22,7 @@ enum ClipboardContentKind: String, CaseIterable, Codable {
         case .image: return "Image"
         case .audio: return "Audio"
         case .file: return "File"
+        case .color: return "Color"
         }
     }
 
@@ -33,6 +35,7 @@ enum ClipboardContentKind: String, CaseIterable, Codable {
         case .image: return "photo"
         case .audio: return "waveform"
         case .file: return "folder"
+        case .color: return "paintpalette"
         }
     }
 }

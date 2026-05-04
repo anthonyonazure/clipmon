@@ -1,0 +1,357 @@
+<Window x:Class="Clipmon.Views.SettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Clipmon — Settings"
+        Width="640" Height="640"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Background="{StaticResource WindowBackgroundGradient}"
+        FontFamily="{StaticResource UIFont}">
+    <Window.Resources>
+        <Style TargetType="TabItem">
+            <Setter Property="Padding" Value="14,8" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}"
+                                Margin="2,0">
+                            <ContentPresenter ContentSource="Header"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource SurfaceBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource AccentDeepBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+
+        <Style TargetType="TextBox" x:Key="FieldBox">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style TargetType="Border" x:Key="FieldFrame">
+            <Setter Property="Background" Value="{StaticResource InsetSurfaceBrush}" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12,8" />
+        </Style>
+
+        <Style TargetType="TextBlock" x:Key="SectionHeading">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        </Style>
+
+        <Style TargetType="TextBlock" x:Key="HelpText">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{StaticResource TextTertiaryBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </Window.Resources>
+
+    <Border Padding="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Margin="0,0,0,14">
+                <TextBlock Text="Clipmon settings"
+                           FontSize="20" FontWeight="Bold"
+                           Foreground="{StaticResource TextPrimaryBrush}" />
+                <TextBlock Text="Sync, privacy, and filtering controls."
+                           FontSize="12"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           Margin="0,4,0,0" />
+            </StackPanel>
+
+            <TabControl Grid.Row="1">
+                <!-- ============ SYNC ============ -->
+                <TabItem Header="Sync">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,16,0,0">
+                        <StackPanel>
+                            <!-- First-run banner: shown when sync is enabled but no pairing code yet -->
+                            <Border x:Name="FirstRunBanner"
+                                    Style="{StaticResource Card}"
+                                    Padding="16"
+                                    Margin="0,0,0,14"
+                                    Background="{StaticResource HeroGradient}"
+                                    Visibility="Collapsed">
+                                <StackPanel>
+                                    <TextBlock Text="Pair this device"
+                                               FontSize="15" FontWeight="SemiBold"
+                                               Foreground="{StaticResource AccentDeepBrush}" />
+                                    <TextBlock Style="{StaticResource HelpText}"
+                                               Margin="0,6,0,0"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               Text="Generate a pairing code below, then enter the same code on every other device. Treat the code like a password — anyone with it can read your synced clipboard." />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <CheckBox x:Name="EnabledCheckbox"
+                                              Content="Enable sync"
+                                              FontSize="14" FontWeight="SemiBold"
+                                              Foreground="{StaticResource TextPrimaryBrush}"
+                                              Click="OnEnabledChanged" />
+                                    <TextBlock Style="{StaticResource HelpText}" Margin="20,4,0,0"
+                                               Text="Items copied here are sent to all paired devices, end-to-end encrypted with your pairing code." />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Pairing code" Style="{StaticResource SectionHeading}" />
+                                    <TextBlock Style="{StaticResource HelpText}" Margin="0,4,0,8"
+                                               Text="Same code on every device. Click Generate, then copy the result to other devices." />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="8" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="6" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Style="{StaticResource FieldFrame}">
+                                            <TextBox x:Name="PairingCodeBox"
+                                                     Style="{StaticResource FieldBox}"
+                                                     FontFamily="{StaticResource MonoFont}" />
+                                        </Border>
+                                        <Button Grid.Column="2" Style="{StaticResource SecondaryButton}"
+                                                Content="Generate" Click="OnGenerateCodeClicked" />
+                                        <Button Grid.Column="4" Style="{StaticResource SecondaryButton}"
+                                                Content="Copy" Click="OnCopyCodeClicked" />
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Relay server" Style="{StaticResource SectionHeading}" />
+                                    <TextBlock Style="{StaticResource HelpText}" Margin="0,4,0,8"
+                                               Text="WebSocket URL of a relay you control. ws://localhost:8765 to test against a server you run yourself." />
+                                    <Border Style="{StaticResource FieldFrame}">
+                                        <TextBox x:Name="RelayUrlBox"
+                                                 Style="{StaticResource FieldBox}"
+                                                 FontFamily="{StaticResource MonoFont}" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Device name" Style="{StaticResource SectionHeading}" />
+                                    <TextBlock Style="{StaticResource HelpText}" Margin="0,4,0,8"
+                                               Text="How this machine appears to other devices in the room." />
+                                    <Border Style="{StaticResource FieldFrame}">
+                                        <TextBox x:Name="DeviceNameBox" Style="{StaticResource FieldBox}" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}" Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="Connected peers" Style="{StaticResource SectionHeading}" />
+                                    <ItemsControl x:Name="PeersList" Margin="0,8,0,0">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{StaticResource InsetSurfaceBrush}"
+                                                        CornerRadius="999" Padding="10,4" Margin="0,2,8,2">
+                                                    <TextBlock Text="{Binding DeviceName}"
+                                                               FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource TextSecondaryBrush}" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                    </ItemsControl>
+                                    <TextBlock x:Name="NoPeersText"
+                                               Style="{StaticResource HelpText}"
+                                               Text="No other devices connected."
+                                               Margin="0,8,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ============ PRIVACY ============ -->
+                <TabItem Header="Privacy">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,16,0,0">
+                        <StackPanel>
+                            <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <CheckBox x:Name="ClearOnQuitCheckbox"
+                                              Content="Clear unpinned history when Clipmon quits"
+                                              FontSize="13" />
+                                    <TextBlock Style="{StaticResource HelpText}" Margin="20,4,0,0"
+                                               Text="Pinned items survive across launches; everything else is wiped on quit." />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}" Padding="16">
+                                <StackPanel>
+                                    <CheckBox x:Name="AutoClearCheckbox"
+                                              Content="Auto-clear OS clipboard"
+                                              FontSize="13" FontWeight="SemiBold" />
+                                    <TextBlock Style="{StaticResource HelpText}" Margin="20,4,0,8"
+                                               Text="After this many seconds with no clipboard activity, the system pasteboard is wiped. Your Clipmon history is unaffected." />
+                                    <StackPanel Orientation="Horizontal" Margin="20,0,0,0">
+                                        <TextBlock Text="Clear after" VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
+                                        <Border Style="{StaticResource FieldFrame}" Width="80" Margin="8,0">
+                                            <TextBox x:Name="AutoClearSecondsBox"
+                                                     Style="{StaticResource FieldBox}"
+                                                     HorizontalContentAlignment="Right" />
+                                        </Border>
+                                        <TextBlock Text="seconds" VerticalAlignment="Center"
+                                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ============ FILTERS ============ -->
+                <TabItem Header="Filters">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,16,0,0">
+                        <StackPanel>
+                            <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <CheckBox x:Name="SensitiveFilterCheckbox"
+                                              Content="Skip likely credentials (recommended)"
+                                              FontSize="13" FontWeight="SemiBold" />
+                                    <TextBlock Style="{StaticResource HelpText}" Margin="20,4,0,0"
+                                               Text="Detects API keys (sk-, AKIA, ghp_…), JWTs, PEM blocks, and high-entropy tokens. Items matched are not recorded." />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Skip these apps" Style="{StaticResource SectionHeading}" />
+                                    <TextBlock Style="{StaticResource HelpText}" Margin="0,4,0,8"
+                                               Text="Process names whose clipboard is never recorded. One per line, partial match (case-insensitive)." />
+                                    <Border Style="{StaticResource FieldFrame}" Padding="8" MinHeight="100">
+                                        <TextBox x:Name="SkipAppsBox"
+                                                 Style="{StaticResource FieldBox}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="NoWrap"
+                                                 VerticalScrollBarVisibility="Auto"
+                                                 FontFamily="{StaticResource MonoFont}"
+                                                 FontSize="12" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Skip keywords" Style="{StaticResource SectionHeading}" />
+                                    <TextBlock Style="{StaticResource HelpText}" Margin="0,4,0,8"
+                                               Text="Substrings (case-insensitive) that, if found in clipboard text, cause it to be ignored. One per line." />
+                                    <Border Style="{StaticResource FieldFrame}" Padding="8" MinHeight="80">
+                                        <TextBox x:Name="SkipKeywordsBox"
+                                                 Style="{StaticResource FieldBox}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="NoWrap"
+                                                 VerticalScrollBarVisibility="Auto"
+                                                 FontFamily="{StaticResource MonoFont}"
+                                                 FontSize="12" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}" Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="Sensitive patterns (advanced)" Style="{StaticResource SectionHeading}" />
+                                    <TextBlock Style="{StaticResource HelpText}" Margin="0,4,0,8"
+                                               Text="Regex patterns that mark text as sensitive. One per line. Invalid patterns are silently ignored." />
+                                    <Border Style="{StaticResource FieldFrame}" Padding="8" MinHeight="120">
+                                        <TextBox x:Name="SensitivePatternsBox"
+                                                 Style="{StaticResource FieldBox}"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="NoWrap"
+                                                 VerticalScrollBarVisibility="Auto"
+                                                 FontFamily="{StaticResource MonoFont}"
+                                                 FontSize="11" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- ============ ABOUT ============ -->
+                <TabItem Header="About">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,16,0,0">
+                        <StackPanel>
+                            <Border Style="{StaticResource Card}" Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="Clipmon" FontSize="16" FontWeight="Bold" />
+                                    <TextBlock Style="{StaticResource HelpText}" Margin="0,8,0,8"
+                                               Text="Local-first clipboard manager with optional E2E-encrypted sync." />
+                                    <TextBlock Style="{StaticResource HelpText}" Margin="0,0,0,4"
+                                               Text="• Local store is AES-256-GCM encrypted with a key wrapped in Windows DPAPI." />
+                                    <TextBlock Style="{StaticResource HelpText}" Margin="0,0,0,4"
+                                               Text="• Sync envelopes are AES-256-GCM encrypted with a key derived from your pairing code (PBKDF2-HMAC-SHA256, 200k iterations)." />
+                                    <TextBlock Style="{StaticResource HelpText}"
+                                               Text="• The relay server never sees your pairing code or clipboard contents." />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+
+            <Grid Grid.Row="2" Margin="0,14,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0"
+                           x:Name="StatusText"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" />
+                <Button Grid.Column="1" Style="{StaticResource SecondaryButton}"
+                        Content="Cancel" Click="OnCancelClicked" Margin="0,0,8,0" />
+                <Button Grid.Column="2" Style="{StaticResource PrimaryButton}"
+                        Content="Save" Click="OnSaveClicked" />
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
