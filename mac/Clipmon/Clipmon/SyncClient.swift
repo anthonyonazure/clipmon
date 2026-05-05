@@ -178,6 +178,7 @@ final class SyncClient: ObservableObject {
 
         let session = URLSession(configuration: .ephemeral)
         let task = session.webSocketTask(with: url)
+        task.maximumMessageSize = 4 * 1024 * 1024 // match server MAX_MESSAGE_BYTES
         self.task = task
         task.resume()
 
